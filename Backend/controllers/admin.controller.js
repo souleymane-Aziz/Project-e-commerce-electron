@@ -1,5 +1,5 @@
 const AdminModel = require('../models/admin.model');
-const userModel = require('../models/user.model');
+const usermodel = require('../models/user.model');
 
 const jwt = require('jsonwebtoken');
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -21,7 +21,7 @@ module.exports.signInAdmin = async (req, res) => {
       if (isPasswordCorrect) {
         const token = createToken(admin._id);
         res.cookie('admin_jwt', token, { httpOnly: true, maxAge });
-        res.status(200).json({ user: admin._id });
+        res.status(200).json({ user: admin._id, role: admin.role });
       } else {
         res.status(401).json({ error: 'Incorrect password' });
       }
@@ -41,7 +41,7 @@ module.exports.logoutAdmin = (req, res) => {
 module.exports.createAdmin =async (req , res)=>{
  const {nom , prenom, email , password, adresse,role, telephone} = req.body;
   try {
-     const user = await userModel.create({nom,prenom,email,password,adresse,role,telephone});
+     const user = await AdminModel.create({nom,prenom,email,password,adresse,role,telephone});
     res.status(201).json({user : user._id})
 
   }catch(err){

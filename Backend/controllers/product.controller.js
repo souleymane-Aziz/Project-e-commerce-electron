@@ -1,14 +1,47 @@
 const productModel = require('../models/product.model');
 const ObjectId = require('mongoose').Types.ObjectId;
-module.exports.createProduct = async (req, res) => {
-  const { nom, description, prix, categorie, stock, images, vendeur } = req.body;
+const multer = require("multer");
+const path = require("path");
+
+// Configuration Multer pour stocker les images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads/"); // dossier où stocker les images
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix);
+  },
+});
+
+const upload = multer({ storage });
+
+// API de création d’un produit
+const createProduct = async (req, res) => {
+  const { nom, description, prix, categorie, stock, vendeur } = req.body;
+  const images = req.file ? [req.file.path] : []; // tableau avec le chemin du fichier uploadé
+
   try {
-    const product = await productModel.create({ nom, description, prix, categorie, stock, images, vendeur });
+    const product = await productModel.create({
+      nom,
+      description,
+      prix,
+      categorie,
+      stock,
+      images,
+      vendeur,
+    });
     res.status(201).json({ product: product._id });
   } catch (err) {
-    console.error('Erreur lors de la création du produit:', err);
-    res.status(500).json({ message: 'Erreur lors de la création du produit' });
+    console.error("Erreur lors de la création du produit:", err);
+    res.status(500).json({ message: "Erreur lors de la création du produit" });
   }
+};
+
+// Export du module avec Multer pour l’utiliser dans tes routes
+module.exports = {
+  createProduct,
+  upload, // tu peux utiliser upload.single("image") dans tes routes
 };
 
 module.exports.updateProduct = async (req, res) => {
@@ -71,7 +104,28 @@ module.exports.deleteProduct = async (req, res) => {
   }
 };
 
-module.exports.getAllProducts = async (req, res) => {
+/* module.exports.getAllProducts = async (req, res) => {
   const products = await productModel.find();
   res.status(200).json(products);
+}; */
+
+
+module.exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await productModel.find();
+
+    // Corriger les chemins d'images
+    const productsWithImages = products.map((prod) => ({
+      ...prod._doc, // garde les autres champs
+      images: prod.images.map((imgPath) => {
+        // Remplace les backslashs par des slashs et supprime 'public/' si présent
+        return imgPath.replace(/\\/g, "/").replace(/^public\//, "");
+      }),
+    }));
+
+    res.status(200).json(productsWithImages);
+  } catch (err) {
+    console.error("Erreur lors de la récupération des produits :", err);
+    res.status(500).json({ message: "Erreur lors de la récupération des produits" });
+  }
 };
