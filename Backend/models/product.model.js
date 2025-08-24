@@ -32,7 +32,7 @@ const productSchema = new mongoose.Schema({
   vendeur: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // lien vers le vendeur
-    required: true
+
   },
   dateAjout: {
     type: Date,

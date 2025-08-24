@@ -1,5 +1,8 @@
 const employeModel = require('../models/employe.model');
-
+const userModel = require('../models/user.model');
+const multer = require("multer");
+const path = require("path");
+const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -10,6 +13,67 @@ const createToken = (id) => {
     expiresIn: maxAge
   })
 };
+
+// Configuration Multer pour stocker les images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/profil/"); // dossier où stocker les images
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix);
+  },
+});
+
+const upload = multer({ storage });
+
+const updateEmploye = async (req, res) => {
+  if (!ObjectId.isValid(req.params.id))
+    return res.status(400).send("ID inconnu " + req.params.id);
+
+  try {
+    const userData = {
+      nom: req.body.nom,
+      prenom: req.body.prenom,
+      email: req.body.email,
+      telephone: req.body.telephone,
+      // on ne remet pas toujours password ici pour éviter de l’écraser
+    };
+       // si un nouveau mot de passe est envoyé → on le hache
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt();
+      userData.password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    // si une photo est envoyée
+    if (req.file) {
+      userData.picture = `/profil/${req.file.filename}`;
+    }
+
+    const id = req.params.id;
+
+    const updateUser = await userModel
+      .findOneAndUpdate(
+        { _id: id },
+        { $set: userData },
+        { new: true, upsert: false, setDefaultsOnInsert: true }
+      )
+      .select("-password"); // cacher le mot de passe
+    if (!updateUser) {
+      return res.status(404).send("Utilisateur non trouvé");
+    }
+
+    return res.send(updateUser);
+  } catch (err) {
+    return res.status(500).send({ message: err.message });
+  }
+};
+
+
+module.exports = {
+  updateEmploye,
+  upload, // tu peux utiliser upload.single("image") dans tes routes
+}
 
 module.exports.signInEmploye = async (req, res) => {
   const { email, password } = req.body;
@@ -60,7 +124,7 @@ module.exports.ClientInfo = async (req, res) => {
         console.log(err);
     }
 };
-module.exports.updateClient = async (req, res) => {
+/*module.exports.updateClient = async (req, res) => {
     if (!ObjectId.isValid(req.params.id))
         return res.status(400).send('ID inconnu ' + req.params.id);
     try {
@@ -91,8 +155,8 @@ module.exports.updateClient = async (req, res) => {
     } catch (err) {
         return res.status(500).send({ message: err.message });
     }
-};
-module.exports.getAllClients = async (req, res) => {
+};*/
+module.exports.getAllEmploye = async (req, res) => {
     const users = await employeModel.find().select('-password');
     res.status(200).json(users);
 }

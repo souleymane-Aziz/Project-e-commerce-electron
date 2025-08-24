@@ -15,7 +15,12 @@ const EmployeSchema = new mongoose.Schema({
   role: {
     type: mongoose.Types.ObjectId,
     ref: 'role'
-  }
+  },
+  images: [
+    {
+      type: String // URL ou chemin local de l'image
+    }
+  ],
 });
 
 EmployeSchema.pre("save", async function (next) {

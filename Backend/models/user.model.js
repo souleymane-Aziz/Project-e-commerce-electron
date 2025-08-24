@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  picture: {
+      type: String,
+      default: "/profil/myprofil.jpg"
+    },
   role: {
     type: String,
     enum: ['client', 'admin','employe'],

@@ -6,6 +6,7 @@ const adminController = require('../controllers/admin.controller');
 router.post('/admin/signup', adminController.createAdmin);
 router.post('/admin/login', adminController.signInAdmin);
 router.get('/admin/logout', adminController.logoutAdmin);
+router.post('/admin/createEmployee', adminController.createEmployee);
 
 //auth client
 router.post('/signup', authController.signUp);

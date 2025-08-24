@@ -39,7 +39,7 @@ module.exports.logoutAdmin = (req, res) => {
 };
 
 module.exports.createAdmin =async (req , res)=>{
- const {nom , prenom, email , password, adresse,role, telephone} = req.body;
+ const {nom , prenom, email ,role, password, adresse, telephone} = req.body;
   try {
      const user = await AdminModel.create({nom,prenom,email,password,adresse,role,telephone});
     res.status(201).json({user : user._id})
@@ -49,6 +49,17 @@ module.exports.createAdmin =async (req , res)=>{
     res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur' });
   }
 };
+module.exports.createEmployee = async (req, res) => {
+    const {nom, prenom,email, password,telephone} = req.body
 
+  try {
+    const user = await usermodel.create({nom,prenom, email, password,telephone, role: "employe" });
+    res.status(201).json({ user: user._id});
+  }
+  catch(err) {
+    const erros = CreateEmpErrors(err)
+    res.status(400).json({ erros })
+  }
+};
 
 
